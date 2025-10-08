@@ -189,7 +189,7 @@ describe('Search and Filter Functionality', () => {
     });
 
     it('should use default values for optional parameters', async () => {
-      const mockResults = [];
+      const mockResults: any[] = [];
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
