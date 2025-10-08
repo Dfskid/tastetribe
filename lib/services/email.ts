@@ -4,7 +4,6 @@
  * Handles sending emails via SendGrid for various user notifications.
  */
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'notifications@tastetribe.app';
 const SENDGRID_API_URL = 'https://api.sendgrid.com/v3/mail/send';
 
@@ -24,6 +23,8 @@ async function sendEmail(
   text: string
 ): Promise<{ success: boolean; error: Error | null }> {
   try {
+    const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+
     if (!SENDGRID_API_KEY) {
       console.warn('SendGrid API key not configured, skipping email send');
       return { success: false, error: new Error('SendGrid not configured') };
@@ -46,9 +47,9 @@ async function sendEmail(
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`SendGrid API error: ${response.status} - ${errorText}`);
+    if (!response || !response.ok) {
+      const errorText = response ? await response.text() : 'No response';
+      throw new Error(`SendGrid API error: ${response?.status || 'N/A'} - ${errorText}`);
     }
 
     return { success: true, error: null };

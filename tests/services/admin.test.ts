@@ -104,8 +104,13 @@ describe('AdminService', () => {
       };
 
       const supabase = (adminService as any).supabase;
-      const mockChain = supabase.from();
-      mockChain.single.mockResolvedValue({ data: mockCategory, error: null });
+      const mockSingle = vi.fn().mockResolvedValue({ data: mockCategory, error: null });
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        single: mockSingle
+      };
+      supabase.from.mockReturnValue(mockChain);
 
       const result = await adminService.createCategory({
         name: 'Test Category',
@@ -125,11 +130,16 @@ describe('AdminService', () => {
 
     it('should throw error on database failure', async () => {
       const supabase = (adminService as any).supabase;
-      const mockChain = supabase.from();
-      mockChain.single.mockResolvedValue({
+      const mockSingle = vi.fn().mockResolvedValue({
         data: null,
         error: { message: 'Database error' }
       });
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        single: mockSingle
+      };
+      supabase.from.mockReturnValue(mockChain);
 
       await expect(
         adminService.createCategory({
@@ -164,11 +174,15 @@ describe('AdminService', () => {
       ];
 
       const supabase = (adminService as any).supabase;
-      const mockChain = supabase.from();
-      mockChain.select.mockResolvedValue({
+      const mockSelect = vi.fn().mockResolvedValue({
         data: [{ id: '1' }, { id: '2' }],
         error: null
       });
+      const mockChain = {
+        insert: vi.fn().mockReturnThis(),
+        select: mockSelect
+      };
+      supabase.from.mockReturnValue(mockChain);
 
       const result = await adminService.bulkCreateItems(items);
 
@@ -177,8 +191,12 @@ describe('AdminService', () => {
 
     it('should handle empty array', async () => {
       const supabase = (adminService as any).supabase;
-      const mockChain = supabase.from();
-      mockChain.select.mockResolvedValue({ data: [], error: null });
+      const mockSelect = vi.fn().mockResolvedValue({ data: [], error: null });
+      const mockChain = {
+        insert: vi.fn().mockReturnThis(),
+        select: mockSelect
+      };
+      supabase.from.mockReturnValue(mockChain);
 
       const result = await adminService.bulkCreateItems([]);
 
@@ -189,22 +207,52 @@ describe('AdminService', () => {
   describe('getAdminAnalytics', () => {
     it('should return comprehensive analytics', async () => {
       const supabase = (adminService as any).supabase;
-      const mockChain = supabase.from();
 
-      mockChain.select
-        .mockResolvedValueOnce({ count: 1000, error: null })
-        .mockResolvedValueOnce({ count: 250, error: null })
-        .mockResolvedValueOnce({
-          data: [
-            { amount: 9900 },
-            { amount: 4900 },
-            { amount: 9900 }
-          ],
-          error: null
-        })
-        .mockResolvedValueOnce({ count: 4, error: null })
-        .mockResolvedValueOnce({ count: 5000, error: null })
-        .mockResolvedValueOnce({ count: 12000, error: null });
+      // Mock the from() method to return different chains for each call
+      let callCount = 0;
+      supabase.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          // profiles
+          return {
+            select: vi.fn().mockResolvedValue({ count: 1000, error: null })
+          };
+        } else if (callCount === 2) {
+          // user_subscriptions
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({ count: 250, error: null })
+          };
+        } else if (callCount === 3) {
+          // payment_history
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({
+              data: [
+                { amount: 9900 },
+                { amount: 4900 },
+                { amount: 9900 }
+              ],
+              error: null
+            })
+          };
+        } else if (callCount === 4) {
+          // categories
+          return {
+            select: vi.fn().mockResolvedValue({ count: 4, error: null })
+          };
+        } else if (callCount === 5) {
+          // items
+          return {
+            select: vi.fn().mockResolvedValue({ count: 5000, error: null })
+          };
+        } else {
+          // ratings
+          return {
+            select: vi.fn().mockResolvedValue({ count: 12000, error: null })
+          };
+        }
+      });
 
       const result = await adminService.getAdminAnalytics();
 

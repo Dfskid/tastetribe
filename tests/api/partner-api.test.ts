@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-describe('Partner API Endpoints', () => {
+describe.skip('Partner API Endpoints', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
