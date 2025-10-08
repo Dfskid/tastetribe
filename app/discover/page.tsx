@@ -426,7 +426,7 @@ export default function DiscoverPage() {
                 <TrendingUp className="h-12 w-12 mx-auto text-slate-300 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No trending items yet</h3>
                 <p className="text-slate-600">
-                  Start rating restaurants to see what's trending
+                  Start rating restaurants to see what&apos;s trending
                 </p>
               </div>
             ) : (

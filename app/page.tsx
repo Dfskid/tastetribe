@@ -101,7 +101,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            Discover restaurants you'll love through friends who share your taste
+            Discover restaurants you&apos;ll love through friends who share your taste
           </motion.p>
 
           <motion.div
