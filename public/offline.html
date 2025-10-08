@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - TasteTribe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #FFEFD5 0%, #FFDAB9 100%);
+      display: flex;
+      align-items: center;
+      justify-center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .emoji {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #FF6347;
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+
+    p {
+      font-size: 16px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #FF6347 0%, #FF8C69 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 24px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(255, 99, 71, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 99, 71, 0.4);
+    }
+
+    .status {
+      margin-top: 24px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .online {
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .offline {
+      color: #ef4444;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="emoji">📡</div>
+    <h1>You're Offline</h1>
+    <p>It looks like you've lost your internet connection. Don't worry, we've saved your recent activity!</p>
+    <a href="/" class="button" onclick="location.reload(); return false;">Try Again</a>
+    <div class="status">
+      Connection status: <span id="status" class="offline">Offline</span>
+    </div>
+  </div>
+
+  <script>
+    function updateStatus() {
+      const statusEl = document.getElementById('status');
+      if (navigator.onLine) {
+        statusEl.textContent = 'Online';
+        statusEl.className = 'online';
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
+      } else {
+        statusEl.textContent = 'Offline';
+        statusEl.className = 'offline';
+      }
+    }
+
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+
+    setInterval(updateStatus, 3000);
+    updateStatus();
+  </script>
+</body>
+</html>

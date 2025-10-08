@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Navigation } from '@/components/Navigation';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { FeedbackButton } from '@/components/FeedbackButton';
+import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -77,9 +78,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: light)', color: '#FF6347' },
     { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
   ],
 };
@@ -91,6 +94,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="TasteTribe" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
+        <link rel="apple-touch-startup-image" href="/apple-splash-2048-2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/apple-splash-1668-2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/apple-splash-1536-2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/apple-splash-1242-2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/apple-splash-1125-2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/apple-splash-828-1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/apple-splash-750-1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
@@ -99,12 +116,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <div className="pb-16 md:pb-0">
+            <div className="pb-16 md:pb-0 safe-area-inset-bottom">
               {children}
             </div>
             <Navigation />
             <Toaster />
             <FeedbackButton />
+            <InstallPrompt />
           </AuthProvider>
         </ThemeProvider>
       </body>

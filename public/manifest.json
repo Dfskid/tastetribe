@@ -1,55 +1,138 @@
 {
   "name": "TasteTribe - Restaurant Discovery",
   "short_name": "TasteTribe",
-  "description": "Discover amazing restaurants with personalized recommendations and social features",
-  "start_url": "/",
+  "description": "Discover amazing restaurants with personalized recommendations powered by your taste profile and friend network",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
-  "orientation": "portrait",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#FFEFD5",
+  "theme_color": "#FF6347",
+  "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "en-US",
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["food", "lifestyle", "social"],
+  "categories": ["food", "lifestyle", "social", "entertainment"],
   "screenshots": [
     {
-      "src": "/screenshot-1.png",
-      "sizes": "1170x2532",
-      "type": "image/png"
+      "src": "/screenshot-mobile-1.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Discover restaurants near you"
+    },
+    {
+      "src": "/screenshot-mobile-2.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Social feed with friends"
+    },
+    {
+      "src": "/screenshot-mobile-3.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Rate and review restaurants"
     }
   ],
   "shortcuts": [
     {
-      "name": "Discover Restaurants",
+      "name": "Discover",
       "short_name": "Discover",
       "description": "Find new restaurants near you",
-      "url": "/discover",
-      "icons": [{ "src": "/icon-discover.png", "sizes": "96x96" }]
+      "url": "/discover?source=shortcut",
+      "icons": [{ "src": "/icon-discover-96.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
       "name": "Search",
       "short_name": "Search",
       "description": "Search for restaurants",
-      "url": "/search",
-      "icons": [{ "src": "/icon-search.png", "sizes": "96x96" }]
+      "url": "/search?source=shortcut",
+      "icons": [{ "src": "/icon-search-96.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
       "name": "Social",
       "short_name": "Social",
       "description": "View friend activity",
-      "url": "/social",
-      "icons": [{ "src": "/icon-social.png", "sizes": "96x96" }]
+      "url": "/social?source=shortcut",
+      "icons": [{ "src": "/icon-social-96.png", "sizes": "96x96", "type": "image/png" }]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "edge_side_panel": {},
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }
