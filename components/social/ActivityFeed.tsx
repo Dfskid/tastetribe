@@ -19,6 +19,7 @@ export function ActivityFeed({ friendsOnly = false, limit = 20 }: ActivityFeedPr
 
   useEffect(() => {
     loadFeed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [friendsOnly, limit]);
 
   const loadFeed = async () => {

@@ -195,6 +195,7 @@ export function useOnboarding() {
         }));
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [user, state.currentRestaurantIndex, state.restaurants]
   );
 

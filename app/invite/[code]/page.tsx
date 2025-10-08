@@ -29,12 +29,14 @@ export default function InvitePage() {
 
   useEffect(() => {
     loadInvitation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
   useEffect(() => {
     if (user && invitation) {
       acceptInvitation();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, invitation]);
 
   const loadInvitation = async () => {

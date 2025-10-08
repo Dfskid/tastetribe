@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   getPersonalizedRecommendations,
   getTrendingItems,
@@ -39,10 +39,12 @@ export default function DiscoverPage() {
 
   useEffect(() => {
     loadAllRecommendations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [personalizedRecs, selectedCuisine, selectedPriceRange]);
 
   const applyFilters = () => {

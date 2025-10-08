@@ -38,6 +38,7 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     loadRestaurant();
     loadUserRating();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const loadRestaurant = async () => {

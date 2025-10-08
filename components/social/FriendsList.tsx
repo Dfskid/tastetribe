@@ -27,6 +27,7 @@ export function FriendsList() {
 
   useEffect(() => {
     loadFriends();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadFriends = async () => {
