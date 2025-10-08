@@ -1,0 +1,55 @@
+{
+  "name": "TasteTribe - Restaurant Discovery",
+  "short_name": "TasteTribe",
+  "description": "Discover amazing restaurants with personalized recommendations and social features",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "lifestyle", "social"],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "1170x2532",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Discover Restaurants",
+      "short_name": "Discover",
+      "description": "Find new restaurants near you",
+      "url": "/discover",
+      "icons": [{ "src": "/icon-discover.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Search",
+      "short_name": "Search",
+      "description": "Search for restaurants",
+      "url": "/search",
+      "icons": [{ "src": "/icon-search.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Social",
+      "short_name": "Social",
+      "description": "View friend activity",
+      "url": "/social",
+      "icons": [{ "src": "/icon-social.png", "sizes": "96x96" }]
+    }
+  ]
+}
