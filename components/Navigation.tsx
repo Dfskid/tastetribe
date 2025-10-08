@@ -22,8 +22,8 @@ export function Navigation() {
         <ThemeToggle />
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 z-50 md:hidden">
-        <div className="flex justify-around items-center h-16">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-700 z-50 md:hidden shadow-lg">
+        <div className="flex justify-around items-center h-16 px-2">
           {links.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -33,10 +33,10 @@ export function Navigation() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors',
+                  'flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all rounded-lg',
                   isActive
-                    ? 'text-slate-900 dark:text-slate-100'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                    ? 'text-tomato-600 dark:text-tomato-400 bg-tomato-50 dark:bg-tomato-950/20'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-tomato-500 dark:hover:text-tomato-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 )}
               >
                 <Icon className="h-5 w-5" />

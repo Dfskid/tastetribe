@@ -101,13 +101,13 @@ export default function SearchPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-peach-50 to-peach-100 dark:bg-slate-900">
       <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-slate-900 dark:text-slate-100">
-            Search Restaurants
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-tomato-600 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
+            <span className="text-3xl">🔎</span> Search
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-gray-700 dark:text-slate-400 font-medium">
             Find the perfect place to eat in Denver
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function SearchPage() {
             <Button
               onClick={handleSearch}
               disabled={loading}
-              className="gap-2"
+              className="gap-2 bg-gradient-to-r from-tomato-500 to-tomato-600 hover:shadow-xl hover:scale-105 transition-all rounded-full px-6 font-semibold shadow-lg"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -245,7 +245,7 @@ export default function SearchPage() {
           {results.map((restaurant, index) => (
             <Card
               key={restaurant.id}
-              className="hover-lift animate-fade-in"
+              className="hover-lift animate-fade-in card-vibrant"
               style={{ animationDelay: `${index * 30}ms` }}
             >
               <CardHeader>

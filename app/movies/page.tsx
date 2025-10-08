@@ -70,14 +70,13 @@ export default function MoviesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Film className="h-8 w-8 text-blue-600" />
-            <h1 className="text-4xl font-bold">Movies</h1>
-          </div>
-          <p className="text-slate-600 text-lg">
+    <div className="min-h-screen bg-gradient-to-br from-peach-50 to-peach-100 dark:bg-slate-900">
+      <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-tomato-600 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
+            <span className="text-3xl">🎬</span> Movies
+          </h1>
+          <p className="text-gray-700 dark:text-slate-400 text-lg font-medium">
             Discover and explore great movies across different genres
           </p>
         </div>
@@ -116,9 +115,17 @@ export default function MoviesPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-slate-600">Loading movies...</p>
+          <div className="min-h-[400px] flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin-plate mb-4">
+                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-tomato-400 to-tomato-600 flex items-center justify-center shadow-2xl">
+                  <span className="text-4xl">🎬</span>
+                </div>
+              </div>
+              <p className="text-gray-700 dark:text-slate-400 text-lg font-medium animate-pulse">
+                Loading movies...
+              </p>
+            </div>
           </div>
         ) : (
           <>
@@ -129,10 +136,11 @@ export default function MoviesPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMovies.map((movie) => (
+              {filteredMovies.map((movie, index) => (
                 <Card
                   key={movie.id}
-                  className="hover:shadow-lg transition-shadow duration-200 border-slate-200"
+                  className="hover-lift animate-fade-in card-vibrant"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
@@ -195,12 +203,14 @@ export default function MoviesPage() {
             </div>
 
             {filteredMovies.length === 0 && (
-              <div className="text-center py-12">
-                <Film className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                <p className="text-lg text-slate-600">
+              <div className="text-center py-16">
+                <div className="mb-4">
+                  <span className="text-8xl">🎬</span>
+                </div>
+                <p className="text-xl font-semibold text-gray-800 dark:text-slate-200 mb-2">
                   No movies found matching your criteria
                 </p>
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-gray-600 dark:text-slate-400">
                   Try adjusting your search or filters
                 </p>
               </div>

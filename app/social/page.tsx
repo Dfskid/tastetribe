@@ -14,19 +14,21 @@ export default function SocialPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-peach-50 to-peach-100 dark:bg-slate-900">
+      <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
+        <div className="mb-8 animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Social</h1>
-              <p className="text-slate-600">
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-tomato-600 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
+                <span className="text-3xl">👥</span> Social
+              </h1>
+              <p className="text-gray-700 dark:text-slate-400 font-medium">
                 Connect with friends and discover new restaurants together
               </p>
             </div>
             <Button
               onClick={() => setShowInviteModal(true)}
-              className="gap-2 bg-blue-600 hover:bg-blue-700"
+              className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-xl hover:scale-105 transition-all rounded-full px-6 py-3 font-semibold shadow-lg"
             >
               <Gift className="h-4 w-4" />
               Invite & Earn
