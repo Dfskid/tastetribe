@@ -105,6 +105,8 @@ function parseRestaurant(item: any): Restaurant {
 
 /**
  * Save a restaurant rating during onboarding
+ * 
+ * FIXED: Removed updated_at field that doesn't exist in database
  */
 export async function saveRestaurantRating(
   userId: string,
@@ -123,12 +125,11 @@ export async function saveRestaurantRating(
       .maybeSingle();
 
     if (existingRating) {
-      // Update existing rating
+      // Update existing rating (removed updated_at field that doesn't exist)
       const { error } = await supabase
         .from('user_ratings')
         .update({
           rating,
-          updated_at: new Date().toISOString(),
         })
         .eq('id', existingRating.id);
 
