@@ -183,7 +183,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
         >
-          <Link href="/social">
+          <Link href="/auth/signup">
             <motion.button
               className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-tomato-500 to-tomato-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
               whileHover={{
