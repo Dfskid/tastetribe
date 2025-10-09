@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limiting';
 
 function getSupabaseClient() {
   return createClient(
@@ -26,6 +27,9 @@ function verifyWebhookSignature(
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'webhook');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const signature = request.headers.get('x-webhook-signature');
     const partnerId = request.headers.get('x-partner-id');

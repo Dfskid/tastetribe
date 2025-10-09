@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripeService } from '@/lib/services/stripe-service';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limiting';
 
 export async function POST(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'webhook');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');

@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/middleware/admin-auth';
 import { tmdbService } from '@/lib/services/tmdb';
 import { adminService } from '@/lib/services/admin';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limiting';
 
 async function handlePost(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'admin');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const { type, maxPages = 5 } = await request.json();
 

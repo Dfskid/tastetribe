@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/middleware/admin-auth';
 import { adminService } from '@/lib/services/admin';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limiting';
 
 async function handleGet(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'admin');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const analytics = await adminService.getAdminAnalytics();
     return NextResponse.json({ analytics });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limiting';
 
 const feedbackSchema = z.object({
   type: z.enum(['bug', 'feature', 'improvement', 'other']),
@@ -17,6 +18,9 @@ function getSupabaseClient() {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'modification');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const supabaseAdmin = getSupabaseClient();
 
@@ -81,6 +85,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'query');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const supabaseAdmin = getSupabaseClient();
 

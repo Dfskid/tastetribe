@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { stripeService } from '@/lib/services/stripe-service';
 import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limiting';
 
 const checkoutSchema = z.object({
   tierId: z.string().uuid(),
@@ -16,6 +17,9 @@ function getSupabaseClient() {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'payment');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const supabase = getSupabaseClient();
     const authHeader = request.headers.get('authorization');

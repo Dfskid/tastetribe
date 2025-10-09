@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminAuth } from '@/lib/middleware/admin-auth';
 import { adminService } from '@/lib/services/admin';
 import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limiting';
 
 const updateCategorySchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -20,6 +21,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'admin');
+  if (rateLimitResult) return rateLimitResult;
+
   const authResult = await withAdminAuth(request, 'content_manager');
   if (authResult instanceof NextResponse) {
     return authResult;
@@ -52,6 +56,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'admin');
+  if (rateLimitResult) return rateLimitResult;
+
   const authResult = await withAdminAuth(request, 'super_admin');
   if (authResult instanceof NextResponse) {
     return authResult;

@@ -7,11 +7,43 @@ interface RateLimitConfig {
 }
 
 const RATE_LIMITS: Record<string, RateLimitConfig> = {
-  api: { windowMs: 60000, maxRequests: 100 },
-  auth: { windowMs: 300000, maxRequests: 5 },
+  // Authentication routes: 5 requests per 15 minutes
+  auth: { windowMs: 900000, maxRequests: 5 },
+
+  // Sensitive operations: 20 requests per hour
+  sensitive: { windowMs: 3600000, maxRequests: 20 },
+
+  // Data modifications: 20 requests per hour
+  modification: { windowMs: 3600000, maxRequests: 20 },
+
+  // General queries: 100 requests per hour
+  query: { windowMs: 3600000, maxRequests: 100 },
+
+  // Search/filtering: 50 requests per hour
+  search: { windowMs: 3600000, maxRequests: 50 },
+
+  // File uploads: 10 requests per hour
+  upload: { windowMs: 3600000, maxRequests: 10 },
+
+  // Admin operations: 50 requests per hour
+  admin: { windowMs: 3600000, maxRequests: 50 },
+
+  // Partner API: 200 requests per hour
+  partner: { windowMs: 3600000, maxRequests: 200 },
+
+  // Webhooks: 500 requests per hour (external systems)
+  webhook: { windowMs: 3600000, maxRequests: 500 },
+
+  // Error logging: 100 requests per hour
+  logging: { windowMs: 3600000, maxRequests: 100 },
+
+  // Payment operations: 10 requests per hour
+  payment: { windowMs: 3600000, maxRequests: 10 },
+
+  // Legacy support
+  api: { windowMs: 3600000, maxRequests: 100 },
   invite: { windowMs: 3600000, maxRequests: 20 },
-  rating: { windowMs: 60000, maxRequests: 30 },
-  search: { windowMs: 60000, maxRequests: 50 },
+  rating: { windowMs: 3600000, maxRequests: 30 },
 };
 
 export async function rateLimitMiddleware(

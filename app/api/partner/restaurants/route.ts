@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limiting';
 
 function getSupabaseClient() {
   return createClient(
@@ -34,6 +35,9 @@ async function validateApiKey(apiKey: string): Promise<{ valid: boolean; partner
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'partner');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const apiKey = request.headers.get('x-api-key');
 
@@ -96,6 +100,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'partner');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const apiKey = request.headers.get('x-api-key');
 

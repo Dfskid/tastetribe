@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/middleware/admin-auth';
 import { adminService } from '@/lib/services/admin';
 import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limiting';
 
 const categorySchema = z.object({
   name: z.string().min(1).max(100),
@@ -17,6 +18,9 @@ const categorySchema = z.object({
 });
 
 async function handleGet(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'admin');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const categories = await adminService.getAllCategories();
     return NextResponse.json({ categories });
@@ -30,6 +34,9 @@ async function handleGet(request: NextRequest) {
 }
 
 async function handlePost(request: NextRequest) {
+  const rateLimitResult = await rateLimitMiddleware(request, 'admin');
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const body = await request.json();
     const validated = categorySchema.parse(body);
