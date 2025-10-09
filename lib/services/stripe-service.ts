@@ -19,7 +19,9 @@ function createStripeStub(): Stripe {
   }
 
   const createProxy = (): any =>
-    new Proxy(() => {}, {
+    new Proxy(() => {
+      throw new Error(missingStripeKeyMessage);
+    }, {
       get(_target, prop) {
         if (prop === 'then' || prop === 'catch' || prop === 'finally') {
           const rejection = createRejectedPromise();
@@ -30,7 +32,10 @@ function createStripeStub(): Stripe {
         return createProxy();
       },
       apply() {
-        return createProxy();
+        throw new Error(missingStripeKeyMessage);
+      },
+      construct() {
+        throw new Error(missingStripeKeyMessage);
       },
     });
 
