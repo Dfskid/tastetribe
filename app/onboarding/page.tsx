@@ -1,224 +1,249 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, AlertCircle, ChevronRight, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { Star } from 'lucide-react';
+import { getLocationWithFallback } from '@/lib/services/geolocation';
+import RestaurantCard from '@/components/onboarding/RestaurantCard';
+import EnhancedStarRating from '@/components/onboarding/EnhancedStarRating';
+import ContextualTags from '@/components/onboarding/ContextualTags';
+import ProgressTracker from '@/components/onboarding/ProgressTracker';
+import CompletionCelebration from '@/components/onboarding/CompletionCelebration';
+import { useToast } from '@/hooks/use-toast';
+
+const MINIMUM_RATINGS = 10;
+const RESTAURANTS_TO_FETCH = 20;
 
 interface Restaurant {
   id: string;
   name: string;
   attributes: {
-    cuisine?: string;
-    price?: string;
+    cuisine_type?: string;
+    price_range?: string;
     address?: string;
-    image?: string;
+    image_url?: string;
+    photo_url?: string;
+    latitude?: number;
+    longitude?: number;
   };
+  distance?: number;
 }
 
-interface DetailedRating {
-  overall: number;
-  ambience?: number;
-  price?: number;
-  foodQuality?: number;
-  service?: number;
-  tags?: string[];
+interface RatingData {
+  rating: number;
+  tags: string[];
 }
-
-// Fun descriptive tags users can choose
-const EXPERIENCE_TAGS = [
-  'Cozy', 'Romantic', 'Trendy', 'Casual', 'Fancy', 
-  'Loud', 'Quiet', 'Great for dates', 'Family-friendly',
-  'Instagram-worthy', 'Hidden gem', 'Tourist spot',
-  'Quick service', 'Slow-paced', 'Good vibes', 'Meh vibes'
-];
 
 export default function OnboardingPage() {
   const router = useRouter();
   const supabase = createClient();
-  
+  const { toast } = useToast();
+
+  const [userId, setUserId] = useState<string | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [ratingsCompleted, setRatingsCompleted] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(true);
-  
-  // Rating state
-  const [currentRating, setCurrentRating] = useState<DetailedRating>({
-    overall: 0,
-    tags: []
-  });
-  const [showDetails, setShowDetails] = useState(false);
-  const [hoveredStar, setHoveredStar] = useState(0);
+  const [ratedCount, setRatedCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
-  // Fetch restaurants based on search or show popular ones
+  const [currentRating, setCurrentRating] = useState<RatingData>({
+    rating: 0,
+    tags: [],
+  });
+
   useEffect(() => {
-    fetchRestaurants();
+    initializeOnboarding();
   }, []);
 
-  async function fetchRestaurants() {
+  const initializeOnboarding = async () => {
     try {
-      setLoading(true);
-      
-      // Get user location (with permission)
-      let userLat = 39.7392; // Denver default
-      let userLng = -104.9903;
-      
-      if (navigator.geolocation) {
-        try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
-          });
-          userLat = position.coords.latitude;
-          userLng = position.coords.longitude;
-        } catch (error) {
-          console.log('Location access denied, using Denver default');
-        }
+      setIsLoading(true);
+      setError(null);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/auth/login');
+        return;
       }
 
-      // Fetch restaurants from database
-      // In a real implementation, you'd calculate distance and sort by proximity
-      const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .eq('category', 'restaurant')
-        .limit(15);
+      setUserId(user.id);
 
-      if (error) throw error;
-      
-      setRestaurants(data || []);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching restaurants:', error);
-      setLoading(false);
-    }
-  }
+      const location = await getLocationWithFallback();
 
-  async function searchRestaurants() {
-    if (!searchQuery.trim()) {
-      fetchRestaurants();
-      return;
-    }
+      let fetchedRestaurants: Restaurant[] = [];
 
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .eq('category', 'restaurant')
-        .ilike('name', `%${searchQuery}%`)
-        .limit(15);
-
-      if (error) throw error;
-      
-      setRestaurants(data || []);
-      setShowSearch(false);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error searching restaurants:', error);
-      setLoading(false);
-    }
-  }
-
-  async function saveRating() {
-    if (currentRating.overall === 0) {
-      alert('Please select an overall rating (1-5 stars)');
-      return;
-    }
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const currentRestaurant = restaurants[currentIndex];
-
-      // Save rating with all details
-      const { error } = await supabase
-        .from('user_ratings')
-        .insert({
-          user_id: user.id,
-          item_id: currentRestaurant.id,
-          overall_rating: currentRating.overall,
-          ambience_rating: currentRating.ambience,
-          price_rating: currentRating.price,
-          food_quality_rating: currentRating.foodQuality,
-          service_rating: currentRating.service,
-          tags: currentRating.tags || []
+      try {
+        const { data, error: rpcError } = await supabase.rpc('get_nearby_restaurants', {
+          user_lat: location.coordinates.latitude,
+          user_lng: location.coordinates.longitude,
+          max_distance: 50000,
+          limit_count: RESTAURANTS_TO_FETCH,
         });
 
+        if (!rpcError && data && data.length > 0) {
+          fetchedRestaurants = data.map((item: any) => ({
+            ...item,
+            distance: item.distance,
+          }));
+        }
+      } catch (err) {
+        console.warn('Location-based fetch failed, using simple query');
+      }
+
+      if (fetchedRestaurants.length === 0) {
+        const { data, error: queryError } = await supabase
+          .from('items')
+          .select('*')
+          .eq('category', 'restaurant')
+          .limit(RESTAURANTS_TO_FETCH);
+
+        if (queryError) throw queryError;
+        fetchedRestaurants = data || [];
+      }
+
+      if (fetchedRestaurants.length === 0) {
+        setError('No restaurants found. Please try again later.');
+        return;
+      }
+
+      setRestaurants(fetchedRestaurants);
+    } catch (err) {
+      console.error('Error initializing onboarding:', err);
+      setError('Failed to load restaurants. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTagToggle = (tag: string) => {
+    setCurrentRating((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tag)
+        ? prev.tags.filter((t) => t !== tag)
+        : [...prev.tags, tag],
+    }));
+  };
+
+  const saveRating = async () => {
+    if (!userId || currentRating.rating === 0) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const restaurant = restaurants[currentIndex];
+
+      const { error } = await supabase.from('user_ratings').insert({
+        user_id: userId,
+        item_id: restaurant.id,
+        rating: currentRating.rating,
+        rating_details: {
+          tags: currentRating.tags,
+          timestamp: new Date().toISOString(),
+          restaurant_name: restaurant.name,
+          cuisine_type: restaurant.attributes.cuisine_type,
+        },
+      });
+
       if (error) throw error;
 
-      // Move to next restaurant
-      const newRatingsCount = ratingsCompleted + 1;
-      setRatingsCompleted(newRatingsCount);
-      
-      // Reset rating state
-      setCurrentRating({ overall: 0, tags: [] });
-      setShowDetails(false);
+      const newRatedCount = ratedCount + 1;
+      setRatedCount(newRatedCount);
 
-      // Check if onboarding is complete (10+ ratings)
-      if (newRatingsCount >= 10) {
-        // Mark onboarding as complete
-        await supabase
-          .from('profiles')
-          .update({ onboarding_completed: true })
-          .eq('id', user.id);
-
-        // Redirect to social feed
-        router.push('/social');
+      if (newRatedCount >= MINIMUM_RATINGS) {
+        await completeOnboarding();
       } else {
-        // Move to next restaurant
-        setCurrentIndex(currentIndex + 1);
+        moveToNext();
       }
-    } catch (error) {
-      console.error('Error saving rating:', error);
-      alert('Failed to save rating. Please try again.');
+    } catch (err) {
+      console.error('Error saving rating:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to save rating. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  function skipRestaurant() {
+  const skipRestaurant = () => {
+    if (isSubmitting) return;
+    moveToNext();
+  };
+
+  const moveToNext = () => {
+    setCurrentRating({ rating: 0, tags: [] });
+
     if (currentIndex < restaurants.length - 1) {
       setCurrentIndex(currentIndex + 1);
-      setCurrentRating({ overall: 0, tags: [] });
-      setShowDetails(false);
-    }
-  }
-
-  function toggleTag(tag: string) {
-    const currentTags = currentRating.tags || [];
-    if (currentTags.includes(tag)) {
-      setCurrentRating({
-        ...currentRating,
-        tags: currentTags.filter(t => t !== tag)
-      });
     } else {
-      setCurrentRating({
-        ...currentRating,
-        tags: [...currentTags, tag]
+      setCurrentIndex(0);
+    }
+  };
+
+  const completeOnboarding = async () => {
+    if (!userId) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setShowCelebration(true);
+    } catch (err) {
+      console.error('Error completing onboarding:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to complete onboarding. Please try again.',
+        variant: 'destructive',
       });
     }
+  };
+
+  const handleCelebrationContinue = () => {
+    router.push('/social');
+  };
+
+  if (showCelebration) {
+    return (
+      <CompletionCelebration
+        onContinue={handleCelebrationContinue}
+        ratingsCount={ratedCount}
+      />
+    );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading restaurants...</p>
+      <div className="min-h-screen bg-gradient-warm flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 text-tomato-500 animate-spin mx-auto" />
+          <p className="text-gray-600 font-medium">Finding amazing restaurants near you...</p>
         </div>
       </div>
     );
   }
 
-  if (restaurants.length === 0) {
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50 p-4">
-        <div className="text-center">
-          <p className="text-xl mb-4">No restaurants found nearby.</p>
+      <div className="min-h-screen bg-gradient-warm flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <AlertCircle className="w-16 h-16 text-tomato-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={fetchRestaurants}
-            className="bg-orange-500 text-white px-6 py-2 rounded-lg"
+            onClick={initializeOnboarding}
+            className="px-6 py-3 bg-tomato-500 text-white rounded-full font-semibold hover:bg-tomato-600 transition-colors"
           >
             Try Again
           </button>
@@ -227,225 +252,112 @@ export default function OnboardingPage() {
     );
   }
 
+  if (restaurants.length === 0) {
+    return null;
+  }
+
   const currentRestaurant = restaurants[currentIndex];
+  const canSubmit = currentRating.rating > 0 && !isSubmitting;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 p-4 pb-24">
-      <div className="max-w-2xl mx-auto pt-8">
-        
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              Rating {ratingsCompleted + 1} of 10+
-            </span>
-            <span className="text-sm text-gray-500">
-              {ratingsCompleted} completed
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-orange-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(ratingsCompleted / 10) * 100}%` }}
+    <div className="min-h-screen bg-gradient-warm flex flex-col">
+      <ProgressTracker current={ratedCount} total={MINIMUM_RATINGS} />
+
+      <div className="flex-1 flex flex-col p-4 pb-6 max-w-2xl mx-auto w-full">
+        <div className="relative flex-1 min-h-[500px] md:min-h-[600px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentRestaurant.id}
+              initial={{ scale: 0.9, opacity: 0, x: 100 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              exit={{ scale: 0.9, opacity: 0, x: -100 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0"
+            >
+              <RestaurantCard
+                name={currentRestaurant.name}
+                cuisine={currentRestaurant.attributes.cuisine_type}
+                priceRange={currentRestaurant.attributes.price_range}
+                address={currentRestaurant.attributes.address}
+                imageUrl={
+                  currentRestaurant.attributes.image_url ||
+                  currentRestaurant.attributes.photo_url
+                }
+                distance={currentRestaurant.distance}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-6 space-y-6 bg-white rounded-3xl p-6 md:p-8 shadow-xl"
+        >
+          <div>
+            <p className="text-center text-gray-700 font-medium mb-4 text-lg">
+              How would you rate this place?
+            </p>
+            <EnhancedStarRating
+              value={currentRating.rating}
+              onChange={(rating) =>
+                setCurrentRating((prev) => ({ ...prev, rating }))
+              }
+              disabled={isSubmitting}
             />
           </div>
-        </div>
 
-        {/* Search Bar (shows at start) */}
-        {showSearch && ratingsCompleted === 0 && (
-          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold mb-2">Find restaurants you know</h2>
-            <p className="text-gray-600 text-sm mb-4">
-              Search for places you've been to, or rate popular Denver spots below
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && searchRestaurants()}
-                placeholder="Search restaurants..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              />
-              <button
-                onClick={searchRestaurants}
-                className="bg-orange-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-orange-600 transition"
+          <AnimatePresence>
+            {currentRating.rating > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                Search
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Restaurant Card */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-          {/* Restaurant Image */}
-          {currentRestaurant.attributes.image && (
-            <div className="w-full h-48 bg-gray-200">
-              <img
-                src={currentRestaurant.attributes.image}
-                alt={currentRestaurant.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-
-          <div className="p-6">
-            {/* Restaurant Info */}
-            <h2 className="text-2xl font-bold mb-2">{currentRestaurant.name}</h2>
-            <div className="flex items-center gap-3 text-sm text-gray-600 mb-6">
-              {currentRestaurant.attributes.cuisine && (
-                <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full">
-                  {currentRestaurant.attributes.cuisine}
-                </span>
-              )}
-              {currentRestaurant.attributes.price && (
-                <span className="font-medium">{currentRestaurant.attributes.price}</span>
-              )}
-            </div>
-            {currentRestaurant.attributes.address && (
-              <p className="text-sm text-gray-500 mb-6">
-                📍 {currentRestaurant.attributes.address}
-              </p>
+                <ContextualTags
+                  selectedTags={currentRating.tags}
+                  onTagToggle={handleTagToggle}
+                  disabled={isSubmitting}
+                />
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* Overall Rating (Required) */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Overall Rating <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2 justify-center">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => setCurrentRating({ ...currentRating, overall: star })}
-                    onMouseEnter={() => setHoveredStar(star)}
-                    onMouseLeave={() => setHoveredStar(0)}
-                    className="transform transition-transform hover:scale-110"
-                  >
-                    <Star
-                      size={48}
-                      className={
-                        star <= (hoveredStar || currentRating.overall)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
-                      }
-                    />
-                  </button>
-                ))}
-              </div>
-              {currentRating.overall > 0 && (
-                <p className="text-center text-sm text-gray-600 mt-2">
-                  {currentRating.overall === 5 && '🤩 Amazing!'}
-                  {currentRating.overall === 4 && '😊 Really good!'}
-                  {currentRating.overall === 3 && '😐 It was okay'}
-                  {currentRating.overall === 2 && '😕 Not great'}
-                  {currentRating.overall === 1 && '😞 Didn\'t like it'}
-                </p>
+          <div className="flex gap-3">
+            <motion.button
+              onClick={skipRestaurant}
+              disabled={isSubmitting}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 px-6 py-4 bg-gray-100 text-gray-700 rounded-2xl font-semibold text-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <X className="w-5 h-5" />
+              Skip
+            </motion.button>
+
+            <motion.button
+              onClick={saveRating}
+              disabled={!canSubmit}
+              whileHover={canSubmit ? { scale: 1.02 } : {}}
+              whileTap={canSubmit ? { scale: 0.98 } : {}}
+              className="flex-1 px-6 py-4 bg-gradient-to-r from-tomato-500 to-tomato-600 text-white rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  Rate
+                  <ChevronRight className="w-5 h-5" />
+                </>
               )}
-            </div>
-
-            {/* Optional Details Toggle */}
-            {currentRating.overall > 0 && !showDetails && (
-              <button
-                onClick={() => setShowDetails(true)}
-                className="w-full py-3 border-2 border-dashed border-orange-300 rounded-lg text-orange-600 font-medium hover:bg-orange-50 transition mb-6"
-              >
-                ✨ Want better recommendations? Add more details
-              </button>
-            )}
-
-            {/* Detailed Ratings (Optional) */}
-            {showDetails && (
-              <div className="border-t pt-6 mb-6 space-y-6">
-                <p className="text-sm text-gray-600 italic">
-                  Optional: The more you share, the better your recommendations!
-                </p>
-
-                {/* Sub-ratings */}
-                {[
-                  { key: 'ambience', label: 'Ambience', emoji: '🏮' },
-                  { key: 'price', label: 'Price', emoji: '💰' },
-                  { key: 'foodQuality', label: 'Food Quality', emoji: '🍽️' },
-                  { key: 'service', label: 'Service', emoji: '👨‍🍳' }
-                ].map(({ key, label, emoji }) => (
-                  <div key={key}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {emoji} {label}
-                    </label>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map((value) => (
-                        <button
-                          key={value}
-                          onClick={() => setCurrentRating({ ...currentRating, [key]: value })}
-                          className={`flex-1 py-2 rounded-lg border-2 transition ${
-                            currentRating[key as keyof DetailedRating] === value
-                              ? 'border-orange-500 bg-orange-50 text-orange-700'
-                              : 'border-gray-200 hover:border-orange-300'
-                          }`}
-                        >
-                          {value}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Experience Tags */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    🏷️ Describe the experience
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {EXPERIENCE_TAGS.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => toggleTag(tag)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                          currentRating.tags?.includes(tag)
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <button
-                onClick={skipRestaurant}
-                className="flex-1 py-3 border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition"
-              >
-                Skip
-              </button>
-              <button
-                onClick={saveRating}
-                disabled={currentRating.overall === 0}
-                className={`flex-1 py-3 rounded-lg font-medium transition ${
-                  currentRating.overall > 0
-                    ? 'bg-orange-500 text-white hover:bg-orange-600'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                {ratingsCompleted >= 9 ? 'Finish' : 'Next'}
-              </button>
-            </div>
+            </motion.button>
           </div>
-        </div>
-
-        {/* Encouragement Message */}
-        {ratingsCompleted >= 5 && ratingsCompleted < 10 && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-            <p className="text-green-700 font-medium">
-              🎉 You're doing great! {10 - ratingsCompleted} more to go!
-            </p>
-          </div>
-        )}
+        </motion.div>
       </div>
     </div>
   );
