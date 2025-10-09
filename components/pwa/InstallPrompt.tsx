@@ -95,8 +95,8 @@ export function InstallPrompt() {
               <p className="text-sm mb-2 font-medium">To install on iOS:</p>
               <ol className="text-sm space-y-1 list-decimal list-inside text-white/90">
                 <li>Tap the Share button in Safari</li>
-                <li>Scroll down and tap "Add to Home Screen"</li>
-                <li>Tap "Add" to confirm</li>
+                <li>Scroll down and tap &ldquo;Add to Home Screen&rdquo;</li>
+                <li>Tap &ldquo;Add&rdquo; to confirm</li>
               </ol>
             </div>
           ) : (
