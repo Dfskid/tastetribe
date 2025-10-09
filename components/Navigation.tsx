@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Map, Users, Film } from 'lucide-react';
+import { Home, Map, Users, Film, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -13,6 +13,7 @@ export function Navigation() {
     { href: '/', label: 'Home', icon: Home },
     { href: '/discover', label: 'Discover', icon: Map },
     { href: '/social', label: 'Social', icon: Users },
+    { href: '/profile', label: 'Profile', icon: User },
     { href: '/movies', label: 'Movies', icon: Film },
   ];
 
