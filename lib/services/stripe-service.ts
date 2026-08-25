@@ -1,9 +1,52 @@
 import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/client';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-09-30.clover'
-});
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const missingStripeKeyMessage =
+  'Missing Stripe secret key. Please set STRIPE_SECRET_KEY in your environment configuration.';
+let hasLoggedStripeWarning = false;
+
+function createRejectedPromise() {
+  const rejection = Promise.reject(new Error(missingStripeKeyMessage));
+  rejection.catch(() => {});
+  return rejection;
+}
+
+function createStripeStub(): Stripe {
+  if (!stripeSecretKey && !hasLoggedStripeWarning && process.env.NODE_ENV !== 'production') {
+    console.warn(missingStripeKeyMessage);
+    hasLoggedStripeWarning = true;
+  }
+
+  const createProxy = (): any =>
+    new Proxy(() => {
+      throw new Error(missingStripeKeyMessage);
+    }, {
+      get(_target, prop) {
+        if (prop === 'then' || prop === 'catch' || prop === 'finally') {
+          const rejection = createRejectedPromise();
+          const method = rejection[prop as keyof Promise<never>];
+          return typeof method === 'function' ? method.bind(rejection) : undefined;
+        }
+
+        return createProxy();
+      },
+      apply() {
+        throw new Error(missingStripeKeyMessage);
+      },
+      construct() {
+        throw new Error(missingStripeKeyMessage);
+      },
+    });
+
+  return createProxy() as Stripe;
+}
+
+const stripe = stripeSecretKey
+  ? new Stripe(stripeSecretKey, {
+      apiVersion: '2025-09-30.clover'
+    })
+  : createStripeStub();
 
 export interface SubscriptionTier {
   id: string;
